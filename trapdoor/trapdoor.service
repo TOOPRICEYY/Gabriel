@@ -9,7 +9,9 @@ WorkingDirectory=/services/Gabriel_Price/Gabriel/trapdoor
 ExecStart=/services/Gabriel_Price/Gabriel/trapdoor/venv/bin/gunicorn -w 1 -b 127.0.0.1:5001 app:app
 Restart=always
 RestartSec=5
-Environment="PATH=/services/Gabriel_Price/Gabriel/trapdoor/trapdoor/venv/bin"
+Environment="PATH=/services/Gabriel_Price/Gabriel/trapdoor/venv/bin"
+Environment="HOME=/home/mittenmade"
+Environment="GIT_SSH_COMMAND=ssh -i /home/mittenmade/.ssh/id_ed25519 -o StrictHostKeyChecking=no"
 
 [Install]
 WantedBy=multi-user.target
