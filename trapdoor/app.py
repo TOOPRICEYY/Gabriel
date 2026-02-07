@@ -12,7 +12,10 @@ SCRIPT_PATH = os.path.join(SCRIPT_DIR, 'on_complete.sh')
 countdown_state = {
     'running': False,
     'current_time': 60,  # Default 60 seconds
-    'initial_time': 60
+    'initial_time': 60,
+    'triggered': False,
+    'trigger_success': None,
+    'trigger_error': None
 }
 countdown_lock = threading.Lock()
 countdown_thread = None
@@ -28,13 +31,18 @@ def run_countdown():
                 break
             if countdown_state['current_time'] <= 0:
                 countdown_state['running'] = False
+                countdown_state['triggered'] = True
                 # Execute bash script when countdown reaches zero
                 try:
-                    subprocess.run(['bash', SCRIPT_PATH], check=True, cwd=SCRIPT_DIR)
+                    result = subprocess.run(['bash', SCRIPT_PATH], check=True, cwd=SCRIPT_DIR, capture_output=True, text=True)
+                    countdown_state['trigger_success'] = True
+                    countdown_state['trigger_error'] = None
                 except subprocess.CalledProcessError as e:
-                    print(f"Error executing script: {e}")
+                    countdown_state['trigger_success'] = False
+                    countdown_state['trigger_error'] = f"Script failed: {e.stderr or e.stdout or str(e)}"
                 except FileNotFoundError:
-                    print(f"{SCRIPT_PATH} not found")
+                    countdown_state['trigger_success'] = False
+                    countdown_state['trigger_error'] = f"{SCRIPT_PATH} not found"
                 break
             countdown_state['current_time'] -= 1
 
@@ -53,7 +61,10 @@ def status():
         return jsonify({
             'running': countdown_state['running'],
             'current_time': countdown_state['current_time'],
-            'initial_time': countdown_state['initial_time']
+            'initial_time': countdown_state['initial_time'],
+            'triggered': countdown_state['triggered'],
+            'trigger_success': countdown_state['trigger_success'],
+            'trigger_error': countdown_state['trigger_error']
         })
 
 
@@ -92,6 +103,9 @@ def reset():
     with countdown_lock:
         countdown_state['running'] = False
         countdown_state['current_time'] = countdown_state['initial_time']
+        countdown_state['triggered'] = False
+        countdown_state['trigger_success'] = None
+        countdown_state['trigger_error'] = None
 
     return jsonify({'status': 'reset'})
 

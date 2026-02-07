@@ -33,6 +33,15 @@
         .controls {
             margin: 20px 0;
         }
+        #trigger-status {
+            color: red;
+            font-size: 18px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        #trigger-status.success {
+            color: green;
+        }
     </style>
 </head>
 <body>
@@ -49,6 +58,7 @@
         <input type="number" id="secsInput" value="0" min="0" max="59">s
         <button onclick="setTime()">Set</button>
     </div>
+    <div id="trigger-status"></div>
 
     <script>
         function formatTime(seconds) {
@@ -60,7 +70,19 @@
 
         function updateDisplay(data) {
             document.getElementById('timer').textContent = formatTime(data.current_time);
-            document.getElementById('status').textContent = data.running ? 'RUNNING' : 'STOPPED';
+
+            const triggerEl = document.getElementById('trigger-status');
+            if (data.triggered) {
+                if (data.trigger_success) {
+                    triggerEl.textContent = 'TRAPDOOR TRIGGERED - Command executed successfully';
+                    triggerEl.className = 'success';
+                } else {
+                    triggerEl.textContent = 'TRAPDOOR TRIGGERED - Command failed: ' + (data.trigger_error || 'Unknown error');
+                    triggerEl.className = '';
+                }
+            } else {
+                triggerEl.textContent = '';
+            }
         }
 
         function startTimer() {
