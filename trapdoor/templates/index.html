@@ -107,15 +107,20 @@
             }
         }
 
+        let lastInitialTime = null;
+
         function pollStatus() {
             fetch('/status')
                 .then(response => response.json())
                 .then(data => {
                     updateDisplay(data);
-                    const t = data.initial_time;
-                    document.getElementById('hoursInput').value = Math.floor(t / 3600);
-                    document.getElementById('minsInput').value = Math.floor((t % 3600) / 60);
-                    document.getElementById('secsInput').value = t % 60;
+                    if (lastInitialTime !== data.initial_time) {
+                        lastInitialTime = data.initial_time;
+                        const t = data.initial_time;
+                        document.getElementById('hoursInput').value = Math.floor(t / 3600);
+                        document.getElementById('minsInput').value = Math.floor((t % 3600) / 60);
+                        document.getElementById('secsInput').value = t % 60;
+                    }
                 });
         }
 
