@@ -4,7 +4,8 @@
 # Add your custom commands below
 
 git pull --no-edit
-git merge dev
+git checkout main
+git merge origin/dev --no-edit
 git commit -am "Trapdoor opened"
 git push origin main
 
