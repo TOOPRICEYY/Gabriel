@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown Timer</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            padding: 40px;
+        }
+        #timer {
+            font-size: 72px;
+            font-family: monospace;
+            margin: 20px 0;
+        }
+        #status {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+        }
+        input {
+            padding: 8px;
+            font-size: 16px;
+            width: 50px;
+            text-align: center;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Trapdoor</h1>
+    <p id="timer">00:00:00</p>
+    <div class="controls">
+        <button onclick="startTimer()">Start</button>
+        <button onclick="stopTimer()">Stop</button>
+        <button onclick="resetTimer()">Reset</button>
+    </div>
+    <div class="controls">
+        <input type="number" id="hoursInput" value="1" min="0" max="24">h
+        <input type="number" id="minsInput" value="0" min="0" max="59">m
+        <input type="number" id="secsInput" value="0" min="0" max="59">s
+        <button onclick="setTime()">Set</button>
+    </div>
+
+    <script>
+        function formatTime(seconds) {
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateDisplay(data) {
+            document.getElementById('timer').textContent = formatTime(data.current_time);
+            document.getElementById('status').textContent = data.running ? 'RUNNING' : 'STOPPED';
+        }
+
+        function startTimer() {
+            fetch('/start', { method: 'POST' });
+        }
+
+        function stopTimer() {
+            fetch('/stop', { method: 'POST' });
+        }
+
+        function resetTimer() {
+            fetch('/reset', { method: 'POST' });
+        }
+
+        function setTime() {
+            const hours = parseInt(document.getElementById('hoursInput').value) || 0;
+            const mins = parseInt(document.getElementById('minsInput').value) || 0;
+            const secs = parseInt(document.getElementById('secsInput').value) || 0;
+            const total = hours * 3600 + mins * 60 + secs;
+            if (total > 0) {
+                fetch(`/set_time/${total}`, { method: 'POST' });
+            }
+        }
+
+        function pollStatus() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    updateDisplay(data);
+                    const t = data.initial_time;
+                    document.getElementById('hoursInput').value = Math.floor(t / 3600);
+                    document.getElementById('minsInput').value = Math.floor((t % 3600) / 60);
+                    document.getElementById('secsInput').value = t % 60;
+                });
+        }
+
+        pollStatus();
+        setInterval(pollStatus, 500);
+    </script>
+</body>
+</html>
