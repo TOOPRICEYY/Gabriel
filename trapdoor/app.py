@@ -34,12 +34,13 @@ def run_countdown():
                 countdown_state['triggered'] = True
                 # Execute bash script when countdown reaches zero
                 try:
-                    result = subprocess.run(['bash', SCRIPT_PATH], check=True, cwd=SCRIPT_DIR, capture_output=True, text=True)
-                    countdown_state['trigger_success'] = True
-                    countdown_state['trigger_error'] = None
-                except subprocess.CalledProcessError as e:
-                    countdown_state['trigger_success'] = False
-                    countdown_state['trigger_error'] = f"Script failed: {e.stderr or e.stdout or str(e)}"
+                    result = subprocess.run(['bash', SCRIPT_PATH], cwd=SCRIPT_DIR, capture_output=True, text=True)
+                    if result.returncode != 0 or result.stderr:
+                        countdown_state['trigger_success'] = False
+                        countdown_state['trigger_error'] = result.stderr or result.stdout or f"Exit code {result.returncode}"
+                    else:
+                        countdown_state['trigger_success'] = True
+                        countdown_state['trigger_error'] = None
                 except FileNotFoundError:
                     countdown_state['trigger_success'] = False
                     countdown_state['trigger_error'] = f"{SCRIPT_PATH} not found"
